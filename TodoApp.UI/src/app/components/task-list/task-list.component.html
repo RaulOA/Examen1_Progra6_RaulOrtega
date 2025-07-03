@@ -1,0 +1,175 @@
+<!-- 🧩 Plantilla HTML de TaskListComponent
+     Muestra:
+     - Formulario para crear tareas con validaciones visuales
+     - Filtros de búsqueda, estado y orden
+     - Lista de tareas con modo edición y modo visual
+     - Resumen estadístico dinámico
+-->
+
+<form
+  #formTarea="ngForm"
+  (ngSubmit)="crearTarea()"
+  novalidate
+  style="margin-bottom: 20px"
+>
+  <!-- Campo: Título (obligatorio con validación visual) -->
+  <input
+    type="text"
+    name="titulo"
+    [(ngModel)]="nuevaTarea.titulo"
+    placeholder="Título"
+    required
+    #titulo="ngModel"
+    [class.input-error]="titulo.invalid && titulo.touched"
+  />
+  <div class="error-msg" *ngIf="titulo.invalid && titulo.touched">
+    El título es obligatorio
+  </div>
+
+  <!-- Campo: Fecha límite (obligatorio) -->
+  <input
+    type="date"
+    name="fechaLimite"
+    [(ngModel)]="nuevaTarea.fechaLimite"
+    required
+    #fechaLimite="ngModel"
+    [class.input-error]="fechaLimite.invalid && fechaLimite.touched"
+  />
+  <div class="error-msg" *ngIf="fechaLimite.invalid && fechaLimite.touched">
+    Debes seleccionar una fecha límite
+  </div>
+
+  <!-- Campo: Descripción (opcional) -->
+  <input
+    type="text"
+    name="descripcion"
+    [(ngModel)]="nuevaTarea.descripcion"
+    placeholder="Descripción"
+  />
+
+  <!-- Selector: Prioridad (valor por defecto = Media [2]) -->
+  <select name="prioridad" [(ngModel)]="nuevaTarea.prioridad">
+    <option [value]="1">Alta</option>
+    <option [value]="2">Media</option>
+    <option [value]="3">Baja</option>
+  </select>
+
+  <!-- Botón para enviar el formulario -->
+  <button type="submit" [disabled]="formTarea.invalid">Guardar</button>
+</form>
+
+<!-- 🎛️ Filtros visuales sobre la lista de tareas
+     - Estado: muestra pendientes, completadas o todas
+     - Orden: por fecha límite o por prioridad
+     - Búsqueda: texto libre en título o descripción
+     - Cada cambio ejecuta aplicarFiltros()
+-->
+<div style="margin-bottom: 15px">
+  <label>
+    Estado:
+    <select [(ngModel)]="filtroEstado" (change)="aplicarFiltros()">
+      <option value="">Todos</option>
+      <option value="pendiente">Pendientes</option>
+      <option value="completada">Completadas</option>
+    </select>
+  </label>
+
+  <label>
+    Ordenar por:
+    <select [(ngModel)]="ordenSeleccionado" (change)="aplicarFiltros()">
+      <option value="">Sin orden</option>
+      <option value="fecha">Fecha límite</option>
+      <option value="prioridad">Prioridad</option>
+    </select>
+  </label>
+
+  <label>
+    Buscar:
+    <input
+      type="text"
+      [(ngModel)]="textoBusqueda"
+      (input)="aplicarFiltros()"
+      placeholder="Título o descripción"
+    />
+  </label>
+</div>
+
+<!-- 📊 Resumen estadístico dinámico 
+     - Calculado en el componente (totalCompletadas, totalPendientes)
+     - Se actualiza tras aplicar filtros o modificar tareas
+-->
+<div class="resumen-tareas">
+  Total: {{ tareas.length }} | ✅ Completadas: {{ totalCompletadas }} | ⏳
+  Pendientes: {{ totalPendientes }}
+</div>
+
+<!-- 🔸 Listado de tareas con dos modos: visual o edición
+     - Usa *ngFor para iterar sobre tareas
+     - Cada tarea tiene clases dinámicas según prioridad y estado
+-->
+<h2>Lista de Tareas</h2>
+<ul>
+  <li
+    *ngFor="let tarea of tareas"
+    [ngClass]="[
+      'tarea-card',
+      'prioridad-' + tarea.prioridad,
+      tarea.estaCompletada ? 'completada' : 'pendiente'
+    ]"
+  >
+    <!-- 📝 Modo edición (si la tarea está siendo editada) -->
+    <div *ngIf="tareaEnEdicion?.id === tarea.id">
+      <input
+        [(ngModel)]="tareaEnEdicion!.titulo"
+        placeholder="Título"
+        name="editTitulo"
+      />
+      <input
+        [(ngModel)]="tareaEnEdicion!.descripcion"
+        placeholder="Descripción"
+        name="editDescripcion"
+      />
+      <input
+        type="date"
+        [(ngModel)]="tareaEnEdicion!.fechaLimite"
+        name="editFecha"
+      />
+      <select [(ngModel)]="tareaEnEdicion!.prioridad" name="editPrioridad">
+        <option [value]="1">Alta</option>
+        <option [value]="2">Media</option>
+        <option [value]="3">Baja</option>
+      </select>
+      <label>
+        <input
+          type="checkbox"
+          [(ngModel)]="tareaEnEdicion!.estaCompletada"
+          name="editEstado"
+        />
+        ¿Completada?
+      </label>
+      <button (click)="guardarEdicion()">💾 Guardar</button>
+      <button (click)="cancelarEdicion()">✖ Cancelar</button>
+    </div>
+
+    <!-- 👁️‍🗨️ Modo visual (cuando no está editando) -->
+    <div *ngIf="tareaEnEdicion?.id !== tarea.id">
+      <h4>{{ tarea.titulo }}</h4>
+      <p>{{ tarea.descripcion }}</p>
+      <p>📅 {{ tarea.fechaLimite }}</p>
+      <p>
+        🔼 Prioridad: <strong>{{ tarea.prioridad }}</strong>
+      </p>
+      <p>
+        Estado:
+        <span
+          [ngClass]="tarea.estaCompletada ? 'estado-ok' : 'estado-pendiente'"
+        >
+          {{ tarea.estaCompletada ? "Completada" : "Pendiente" }}
+        </span>
+      </p>
+      <button (click)="marcarComoCompletada(tarea)">✔️ Completar</button>
+      <button (click)="iniciarEdicion(tarea)">✏️ Editar</button>
+      <button (click)="eliminarTarea(tarea.id)">🗑️ Eliminar</button>
+    </div>
+  </li>
+</ul>

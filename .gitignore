@@ -1,0 +1,24 @@
+# ⛔ Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ⛔ Compilación .NET
+bin/
+obj/
+TestResults/
+*.log
+
+# ⛔ Angular / Node.js
+node_modules/
+dist/
+.angular/
+*.env
+
+# ⛔ General
+Thumbs.db
+.DS_Store
+.env
+*.db
